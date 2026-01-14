@@ -1,19 +1,23 @@
 import "../global.css";
-import { View, Text, StyleSheet , Button } from "react-native";
+import { View, Text, StyleSheet, Button } from "react-native";
 import React, { useState } from "react";
-import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
+import {
+  CameraView,
+  useCameraPermissions,
+  CameraType,
+  BarcodeScanningResult,
+} from "expo-camera";
 
-
-const Index = () => {
+const index = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>("back");
+  const [scanned, setScanned] = useState(false);
+  const [isScanning, setIsScanning] = useState(true); // 👈 NEW
 
-  // Permission still loading
   if (!permission) {
     return <View />;
   }
 
-  // Permission not granted
   if (!permission.granted) {
     return (
       <View style={styles.center}>
@@ -23,9 +27,23 @@ const Index = () => {
     );
   }
 
+  const handleBarcodeScanned = (result: BarcodeScanningResult) => {
+    setScanned(true);
+    setIsScanning(false); // 👈 STOP scanning after first scan
+    console.log("Scanned data:", result.data);
+    alert(`Scanned: ${result.data}`);
+  };
+
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} />
+      <CameraView
+        style={styles.camera}
+        facing={facing}
+        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        onBarcodeScanned={
+          isScanning && !scanned ? handleBarcodeScanned : undefined
+        }
+      />
 
       <View style={styles.buttonContainer}>
         <Button
@@ -34,12 +52,30 @@ const Index = () => {
             setFacing((prev) => (prev === "back" ? "front" : "back"))
           }
         />
+
+        <Button
+          title={isScanning ? "Stop Scanning" : "Start Scanning"}
+          onPress={() => {
+            setScanned(false);
+            setIsScanning((prev) => !prev);
+          }}
+        />
+
+        {scanned && (
+          <Button
+            title="Scan Again"
+            onPress={() => {
+              setScanned(false);
+              setIsScanning(true);
+            }}
+          />
+        )}
       </View>
     </View>
   );
 };
 
-export default Index;
+export default index;
 
 const styles = StyleSheet.create({
   container: {
@@ -53,6 +89,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 40,
     alignSelf: "center",
+    gap: 10,
   },
   center: {
     flex: 1,
