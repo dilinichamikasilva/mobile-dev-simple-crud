@@ -1,14 +1,25 @@
 import "../global.css";
-import { View } from "react-native";
+import { View  , Text} from "react-native";
 import React from "react";
-import { CameraView } from "expo-camera";
+import { CameraView , useCameraPermissions } from "expo-camera";
 
 const index = () => {
-  return (
-    <View className="flex-1 bg-black">
-      <CameraView className="flex-1" />
-    </View>
-  );
+    const [permission, requestPermission] = useCameraPermissions();
+
+    if(!permission?.granted){
+        return (
+            <View className="flex-1 items-center justify-center">
+                <Text>Camera permission is required!</Text>
+                <Text onPress={requestPermission}>Grant permission</Text>
+            </View>
+        )
+    }
+    
+    return (
+        <View className="flex-1 bg-black">
+        <CameraView style={{ flex: 1 }} facing="front" />   // Use "front" or "back" to select the camera
+        </View>
+    );
 };
 
 export default index;
